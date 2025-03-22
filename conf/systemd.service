@@ -7,7 +7,7 @@ User=__APP__
 Group=__APP__
 WorkingDirectory=__DATA_DIR__/
 
-ExecStart=__DATA_DIR__/venv/bin/gunicorn --config __DATA_DIR__/gunicorn.conf.py wsgi
+ExecStart=__DATA_DIR__/.venv/bin/gunicorn --config __DATA_DIR__/gunicorn.conf.py wsgi
 
 StandardOutput=syslog
 StandardError=syslog
