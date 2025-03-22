@@ -1,3 +1,8 @@
+# Outils de build et dépendances critiques (à installer en premier)
+setuptools==65.5.1
+wheel
+pyyaml
+
 asgiref==3.3.4
 asn1crypto==1.4.0
 babel==2.9.1
@@ -36,7 +41,7 @@ paramiko==2.10.1
 pip-autoremove==0.9.1
 pkginfo==1.7.0
 protobuf==3.18.3
-py-moneyed >=1.2,<2.0
+py-moneyed>=1.2,<2.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
@@ -69,9 +74,3 @@ uritemplate==3.0.1
 urllib3==1.26.5
 webencodings==0.5.1
 zipp==3.4.1
-
-# Ajouts nécessaires pour l'installation correcte de mysqlclient
-setuptools>=44.0.0
-wheel
-pyyaml
-django-bom
