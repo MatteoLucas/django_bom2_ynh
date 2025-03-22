@@ -69,3 +69,7 @@ uritemplate==3.0.1
 urllib3==1.26.5
 webencodings==0.5.1
 zipp==3.4.1
+
+# Ajouts nécessaires pour l'installation correcte de mysqlclient
+setuptools>=44.0.0
+wheel
