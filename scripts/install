@@ -78,15 +78,15 @@ myynh_setup_python_venv
 # ================================================
 ynh_script_progression --message="Create $app configuration files..."
 
-ynh_add_config --template="gunicorn.conf.py" --destination="$data_dir/gunicorn.conf.py"
+ynh_config_add --template="gunicorn.conf.py" --destination="$data_dir/gunicorn.conf.py"
 
-ynh_add_config --template="manage.py" --destination="$data_dir/manage.py"
+ynh_config_add --template="manage.py" --destination="$data_dir/manage.py"
 chmod -c +x "$data_dir/manage.py"
 
-ynh_add_config --template="settings.py" --destination="$data_dir/settings.py"
-ynh_add_config --template="setup_user.py" --destination="$data_dir/setup_user.py"
-ynh_add_config --template="urls.py" --destination="$data_dir/urls.py"
-ynh_add_config --template="wsgi.py" --destination="$data_dir/wsgi.py"
+ynh_config_add --template="settings.py" --destination="$data_dir/settings.py"
+ynh_config_add --template="setup_user.py" --destination="$data_dir/setup_user.py"
+ynh_config_add --template="urls.py" --destination="$data_dir/urls.py"
+ynh_config_add --template="wsgi.py" --destination="$data_dir/wsgi.py"
 
 touch "$data_dir/local_settings.py"
 
@@ -132,14 +132,13 @@ ynh_script_progression --message="Configuring systemd service '$app'..." --weigh
 
 # https://yunohost.org/en/packaging_apps_helpers#ynh-add-systemd-config
 # https://github.com/YunoHost/yunohost/blob/dev/helpers/systemd
-ynh_add_systemd_config --service=$app --template="systemd.service"
+ynh_config_add_systemd
 
 #=================================================
 # Start the app server via systemd
 #=================================================
-ynh_script_progression --message="Starting systemd service '$app'..." --weight=5
-
-ynh_systemd_action --service_name=$app --action="start" --log_path="$log_file"
+ynh_script_progression "Starting systemd service '$app'..."
+ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 
 #=================================================
 # NGINX CONFIGURATION
@@ -149,7 +148,7 @@ ynh_script_progression --message="Configuring nginx web server..."
 # Create a dedicated nginx config
 # https://yunohost.org/en/contribute/packaging_apps/helpers
 # https://github.com/YunoHost/yunohost/blob/dev/helpers/nginx
-ynh_add_nginx_config "public_path" "port"
+ynh_config_add_nginx "public_path" "port"
 
 #=================================================
 # END OF SCRIPT
