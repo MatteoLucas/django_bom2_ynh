@@ -2,14 +2,9 @@ import os
 
 # Valeurs par défaut
 DEBUG = False
+SECRET_KEY = ''  # Empêche l'erreur ImproperlyConfigured avant l'import des settings locaux
 BOM_CONFIG = {}
 BASE_DIR = None
-
-# Chargement des surcharges personnalisées
-try:
-    from bom.local_settings import *
-except ImportError as e:
-    print(e)
 
 # Construction des chemins
 if not BASE_DIR:
@@ -72,18 +67,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'bom.wsgi.application'
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 LOGGING = {
@@ -192,3 +179,15 @@ BOM_CONFIG = bom_config_new
 
 # Custom login url for BOM_LOGIN
 BOM_LOGIN_URL = None
+
+# ──────────────────────────────────────────────
+# Surcharges locales et validation
+# ──────────────────────────────────────────────
+
+try:
+    from bom.local_settings import *
+except ImportError as e:
+    print("No local_settings.py loaded:", e)
+
+if not SECRET_KEY:
+    raise Exception("SECRET_KEY is not set. Make sure local_settings.py defines it.")
