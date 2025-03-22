@@ -1,0 +1,156 @@
+#!/bin/bash
+
+#=================================================
+# IMPORT GENERIC HELPERS
+#=================================================
+
+source _common.sh
+source /usr/share/yunohost/helpers
+
+# Install parameters are automatically saved as settings
+#
+# Settings are automatically loaded as bash variables
+# in every app script context, therefore typically these will exist:
+# - $domain
+# - $path
+# - $language
+# ... etc
+#
+# Resources defined in the manifest are provisioned prior to this script
+# and corresponding settings are also available, such as:
+# - $install_dir
+# - $port
+# - $db_name
+# ...
+
+#
+# $app is the app id (i.e. 'example' for first install,
+# or 'example__2', '__3', ... for multi-instance installs)
+#
+
+#=================================================
+# SETTINGS
+#=================================================
+ynh_script_progression --message="Storing installation settings..."
+
+# Logging:
+log_file="/var/log/$app/$app.log"
+ynh_app_setting_set --app=$app --key=log_file --value="$log_file"
+
+# Redis:
+redis_db=$(ynh_redis_get_free_db)
+ynh_app_setting_set --app=$app --key=redis_db --value="$redis_db"
+
+# App settings:
+ynh_app_setting_set --app=$app --key=default_from_email --value="$default_from_email"
+ynh_app_setting_set --app=$app --key=admin_email --value="$admin_email"
+ynh_app_setting_set --app=$app --key=debug_enabled --value="$debug_enabled"
+ynh_app_setting_set --app=$app --key=log_level --value="$log_level"
+
+#=================================================
+# CHECK IF THE APP CAN BE INSTALLED WITH THESE ARGS
+#=================================================
+ynh_script_progression --message="Validating installation parameters..."
+
+mkdir -p "$install_dir/media" "$install_dir/static"
+
+#=================================================
+# SETUP LOG FILE
+#=================================================
+ynh_script_progression --message="Setup logging..."
+
+myynh_setup_log_file
+
+# Use logrotate to manage application logfile(s)
+ynh_use_logrotate --logfile="$log_file" --specific_user=$app
+
+#=================================================
+# PYTHON VIRTUALENV
+#=================================================
+ynh_script_progression --message="Create and setup Python virtualenv..." --weight=45
+cp ../conf/requirements.txt "$data_dir/requirements.txt"
+myynh_setup_python_venv
+
+#=================================================
+# copy config files
+# ================================================
+ynh_script_progression --message="Create $app configuration files..."
+
+ynh_add_config --template="gunicorn.conf.py" --destination="$data_dir/gunicorn.conf.py"
+
+ynh_add_config --template="manage.py" --destination="$data_dir/manage.py"
+chmod -c +x "$data_dir/manage.py"
+
+ynh_add_config --template="settings.py" --destination="$data_dir/settings.py"
+ynh_add_config --template="setup_user.py" --destination="$data_dir/setup_user.py"
+ynh_add_config --template="urls.py" --destination="$data_dir/urls.py"
+ynh_add_config --template="wsgi.py" --destination="$data_dir/wsgi.py"
+
+touch "$data_dir/local_settings.py"
+
+#=================================================
+# MIGRATE / COLLECTSTATIC / CREATEADMIN
+#=================================================
+ynh_script_progression --message="migrate/collectstatic/createadmin..." --weight=10
+
+cd "$data_dir" || exit
+
+# Just for debugging:
+./manage.py diffsettings
+
+./manage.py migrate --no-input
+./manage.py collectstatic --no-input
+
+# Create/update Django superuser (set unusable password, because auth done via SSOwat):
+./manage.py create_superuser --username="$admin" --email="$(ynh_user_get_info "$admin" mail)"
+
+# Check the configuration
+# This may fail in some cases with errors, etc., but the app works and the user can fix issues later.
+./manage.py check --deploy || true
+
+#=================================================
+# INTEGRATE SERVICE IN YUNOHOST
+#=================================================
+ynh_script_progression --message="Integrating service in YunoHost..."
+
+yunohost service add --description $app $app
+
+#=================================================
+# GENERIC FINALIZATION
+#=================================================
+# SECURE FILES AND DIRECTORIES
+#=================================================
+ynh_script_progression --message="Set file permissions..."
+myynh_fix_file_permissions
+
+#=================================================
+# SETUP SYSTEMD
+#=================================================
+ynh_script_progression --message="Configuring systemd service '$app'..." --weight=5
+
+# https://yunohost.org/en/packaging_apps_helpers#ynh-add-systemd-config
+# https://github.com/YunoHost/yunohost/blob/dev/helpers/systemd
+ynh_add_systemd_config --service=$app --template="systemd.service"
+
+#=================================================
+# Start the app server via systemd
+#=================================================
+ynh_script_progression --message="Starting systemd service '$app'..." --weight=5
+
+ynh_systemd_action --service_name=$app --action="start" --log_path="$log_file"
+
+#=================================================
+# NGINX CONFIGURATION
+#=================================================
+ynh_script_progression --message="Configuring nginx web server..."
+
+# Create a dedicated nginx config
+# https://yunohost.org/en/contribute/packaging_apps/helpers
+# https://github.com/YunoHost/yunohost/blob/dev/helpers/nginx
+ynh_add_nginx_config "public_path" "port"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression --message="Installation of $app completed" --last

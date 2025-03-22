@@ -1,0 +1,92 @@
+# https://yunohost.org/en/packaging_manifest
+packaging_format = 2
+
+id = "django-bom"
+name = "Django-Bom"
+description.en = "Django-Bom is a Django-based Bill of Materials management system."
+description.fr = "Django-Bom est un système de gestion de nomenclature basé sur Django."
+
+version = "0.1.0~ynh4"
+
+maintainers = ["Matteo Lucas"]
+
+[upstream]
+# Lien vers le projet d'origine
+license = "GPL-3.0-or-later"
+code = "https://github.com/mpkasp/django-bom"
+
+[integration]
+# YunoHost version requise
+yunohost = ">=11.2"
+helpers_version = "2.1" # https://yunohost.org/en/packaging_apps_helpers_v2.1
+architectures = "all"
+multi_instance = false  # Django-Bom est généralement installé en une seule instance
+ldap = false  # Pas nécessaire sauf si on veut intégrer LDAP
+sso = false  # Désactivé pour l’instant, peut être activé si on intègre un login Yunohost
+disk = "100M"  # Augmenté pour prendre en compte les migrations et les fichiers statiques
+ram.build = "100M"
+ram.runtime = "100M"
+
+[install]
+# Paramètres d'installation
+
+    [install.domain]
+    type = "domain"
+
+    [install.path]
+    type = "path"
+    default = "/django-bom"
+
+    [install.admin]
+    type = "user"
+
+    [install.init_main_permission]
+    type = "group"
+    default = "admins"
+
+    [install.default_from_email]  # Adresse e-mail par défaut pour Django-Bom
+    ask.en = "Default email address for various automated emails."
+    type = "email"
+    example = "admin@example.com"
+
+    [install.admin_email]  # Adresse e-mail pour les notifications d'erreur
+    ask.en = "Email address for error reports."
+    type = "email"
+    example = "admin@example.com"
+
+    [install.debug_enabled]  # Mode debug Django (à désactiver en prod)
+    ask.en = "Should debugging be enabled? (Not recommended for production!)"
+    type = "boolean"
+    default = false
+
+    [install.log_level]  # Niveau de logs
+    ask.en = "Logging level"
+    type = "select"
+    choices = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    default = "WARNING"
+
+[resources]
+
+    [resources.system_user]
+    # Provisionner un utilisateur système dédié
+
+    [resources.install_dir]
+    # Répertoire d'installation principal
+    group = "www-data:r-x"
+
+    [resources.data_dir]
+    # Répertoire pour les fichiers de données (media, migrations, etc.)
+
+    [resources.permissions]
+    main.url = "/"
+
+    [resources.ports]
+    # Utilisation d'un port aléatoire pour le reverse proxy si nécessaire
+
+    [resources.apt]
+    # Dépendances requises pour Django-Bom et PostgreSQL
+    packages = "build-essential, python3-dev, python3-pip, python3-venv, git, libpq-dev, postgresql, postgresql-contrib, checkinstall, pkg-config, libssl-dev, openssl"
+
+    [resources.database]
+    # Configuration automatique d'une base de données PostgreSQL
+    type = "postgresql"
