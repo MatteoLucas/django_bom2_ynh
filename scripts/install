@@ -129,7 +129,7 @@ EOF
 # INTEGRATE SERVICE IN YUNOHOST
 #=================================================
 ynh_script_progression --message="Integrating service in YunoHost..."
-
+deactivate
 yunohost service add --description $app $app
 
 #=================================================
