@@ -62,7 +62,7 @@ ynh_script_progression --message="Setup logging..."
 myynh_setup_log_file
 
 # Use logrotate to manage application logfile(s)
-ynh_use_logrotate --logfile="$log_file" --specific_user=$app
+ynh_config_add_logrotate "$log_file"
 
 #=================================================
 # PYTHON VIRTUALENV
