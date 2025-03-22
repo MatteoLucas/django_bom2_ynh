@@ -23,6 +23,8 @@ source /usr/share/yunohost/helpers
 # - $db_name
 # ...
 
+admin_email=$(ynh_user_get_info --username="$admin" --key=mail)
+
 #
 # $app is the app id (i.e. 'example' for first install,
 # or 'example__2', '__3', ... for multi-instance installs)
@@ -105,7 +107,19 @@ ls
 #./manage.py collectstatic --no-input
 
 # Create/update Django superuser (set unusable password, because auth done via SSOwat):
-"$data_dir/.venv/bin/python" manage.py create_superuser --username="$admin" --email="$(ynh_user_get_info --username="$admin" --key=mail)"
+#"$data_dir/.venv/bin/python" manage.py create_superuser --username="$admin" --email="$(ynh_user_get_info --username="$admin" --key=mail)"
+
+"$data_dir/.venv/bin/python" "$data_dir/manage.py" shell <<EOF
+from django.contrib.auth import get_user_model
+User = get_user_model()
+User.objects.update_or_create(
+    username="$admin",
+    defaults={"email": "$admin_email", "is_superuser": True, "is_staff": True}
+)
+EOF
+
+
+
 
 # Check the configuration
 # This may fail in some cases with errors, etc., but the app works and the user can fix issues later.
