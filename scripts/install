@@ -7,13 +7,11 @@
 source _common.sh
 source /usr/share/yunohost/helpers
 
-#=================================================
-# INITIAL SETUP
-#=================================================
-
 admin_email=$(ynh_user_get_info --username="$admin" --key=mail)
 
-# Copie le code de l’app
+#=================================================
+# COPY SOURCE FILES
+#=================================================
 cp -r ../bom "$data_dir/"
 
 #=================================================
@@ -21,17 +19,17 @@ cp -r ../bom "$data_dir/"
 #=================================================
 ynh_script_progression --message="Storing installation settings..."
 
-# Logging
-log_file="/var/log/$app/$app.log"
+# Logging:
+log_file="$data_dir/django.log"
 ynh_app_setting_set --app=$app --key=log_file --value="$log_file"
 
 myynh_install_system_dependencies
 
-# Redis
+# Redis:
 redis_db=$(ynh_redis_get_free_db)
 ynh_app_setting_set --app=$app --key=redis_db --value="$redis_db"
 
-# App settings
+# App settings:
 ynh_app_setting_set --app=$app --key=default_from_email --value="$default_from_email"
 ynh_app_setting_set --app=$app --key=admin_email --value="$admin_email"
 ynh_app_setting_set --app=$app --key=debug_enabled --value="$debug_enabled"
@@ -41,17 +39,20 @@ ynh_app_setting_set --app=$app --key=log_level --value="$log_level"
 # CHECK IF THE APP CAN BE INSTALLED WITH THESE ARGS
 #=================================================
 ynh_script_progression --message="Validating installation parameters..."
-
 mkdir -p "$install_dir/media" "$install_dir/static"
+
+#=================================================
+# GENERATE SECRET_KEY EARLY
+#=================================================
+secret_key=$(openssl rand -base64 64 | tr -d '\n')
+echo "SECRET_KEY = '$secret_key'" > "$data_dir/local_settings.py"
+ynh_app_setting_set --app=$app --key=secret_key --value="$secret_key"
 
 #=================================================
 # SETUP LOG FILE
 #=================================================
 ynh_script_progression --message="Setup logging..."
-
 myynh_setup_log_file
-
-# Logrotate
 ynh_config_add_logrotate "$log_file"
 
 #=================================================
@@ -69,35 +70,22 @@ ynh_script_progression --message="Create $app configuration files..."
 ynh_config_add --template="gunicorn.conf.py" --destination="$data_dir/gunicorn.conf.py"
 ynh_config_add --template="manage.py" --destination="$data_dir/manage.py"
 chmod +x "$data_dir/manage.py"
-
 ynh_config_add --template="settings.py" --destination="$data_dir/settings.py"
 ynh_config_add --template="setup_user.py" --destination="$data_dir/setup_user.py"
 ynh_config_add --template="urls.py" --destination="$data_dir/urls.py"
 ynh_config_add --template="wsgi.py" --destination="$data_dir/wsgi.py"
 
-touch "$data_dir/local_settings.py"
-
-# Génère une SECRET_KEY Django sécurisée
-secret_key=$(openssl rand -base64 64 | tr -d '\n')
-echo "SECRET_KEY = '$secret_key'" >> "$data_dir/local_settings.py"
-ynh_app_setting_set --app=$app --key=secret_key --value="$secret_key"
-
 #=================================================
 # MIGRATE / COLLECTSTATIC / CREATEADMIN
 #=================================================
 ynh_script_progression --message="migrate/collectstatic/createadmin..." --weight=10
-
 cd "$data_dir" || exit
-ls
 
-# Export pour LOGFILE dynamique
-export DJANGO_LOGFILE="$data_dir/django.log"
+export DJANGO_LOGFILE_DIR="$data_dir"
 
-# Migrations
 "$data_dir/.venv/bin/python" manage.py migrate
 
-# Superuser
-"$data_dir/.venv/bin/python" "$data_dir/manage.py" shell <<EOF
+"$data_dir/.venv/bin/python" manage.py shell <<EOF
 from django.contrib.auth import get_user_model
 User = get_user_model()
 User.objects.update_or_create(
@@ -106,7 +94,6 @@ User.objects.update_or_create(
 )
 EOF
 
-# Check configuration
 "$data_dir/.venv/bin/python" manage.py check --deploy || true
 
 #=================================================
@@ -117,21 +104,16 @@ deactivate
 yunohost service add --description $app $app
 
 #=================================================
-# SECURE FILES AND DIRECTORIES
+# FILE PERMISSIONS
 #=================================================
 ynh_script_progression --message="Set file permissions..."
 myynh_fix_file_permissions
 
 #=================================================
-# SETUP SYSTEMD
+# SYSTEMD SERVICE
 #=================================================
 ynh_script_progression --message="Configuring systemd service '$app'..." --weight=5
 ynh_config_add_systemd
-
-#=================================================
-# Start the app server via systemd
-#=================================================
-ynh_script_progression "Starting systemd service '$app'..."
 ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 
 #=================================================
@@ -141,6 +123,6 @@ ynh_script_progression --message="Configuring nginx web server..."
 ynh_config_add_nginx "public_path" "port"
 
 #=================================================
-# END OF SCRIPT
+# DONE
 #=================================================
 ynh_script_progression --message="Installation of $app completed" --last
