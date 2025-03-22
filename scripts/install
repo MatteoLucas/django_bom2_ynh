@@ -100,6 +100,8 @@ ynh_script_progression --message="migrate/collectstatic/createadmin..." --weight
 cd "$data_dir" || exit
 ls
 
+export DJANGO_LOGFILE_DIR="$data_dir"
+
 # Just for debugging:
 #./manage.py diffsettings
 

@@ -97,7 +97,7 @@ LOGGING = {
         },
         'logfile': {
             'class': 'logging.handlers.WatchedFileHandler',
-            'filename': '/var/log/indabom/django.log' if not DEBUG else './bom.log',
+            'filename': os.path.join(os.environ.get("DJANGO_LOGFILE_DIR", BASE_DIR), 'django.log'),
         },
     },
     'loggers': {
