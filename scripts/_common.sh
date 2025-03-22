@@ -64,5 +64,6 @@ myynh_install_system_dependencies() {
         python3-venv \
         build-essential \
 		redis \
+		libffi-dev \
         default-libmysqlclient-dev
 }
