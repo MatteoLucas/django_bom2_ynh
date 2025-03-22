@@ -30,6 +30,8 @@ admin_email=$(ynh_user_get_info --username="$admin" --key=mail)
 # or 'example__2', '__3', ... for multi-instance installs)
 #
 
+cp -r ../bom "$data_dir/"
+
 #=================================================
 # SETTINGS
 #=================================================
