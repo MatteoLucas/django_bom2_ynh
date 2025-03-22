@@ -37,6 +37,8 @@ ynh_script_progression --message="Storing installation settings..."
 log_file="/var/log/$app/$app.log"
 ynh_app_setting_set --app=$app --key=log_file --value="$log_file"
 
+myynh_install_system_dependencies
+
 # Redis:
 redis_db=$(ynh_redis_get_free_db)
 ynh_app_setting_set --app=$app --key=redis_db --value="$redis_db"

@@ -56,3 +56,13 @@ myynh_fix_file_permissions() {
     chown -c -R "$app:$app" "$data_dir"
     chmod -c u+rwx,g+rx,o-rwx "$data_dir"
 }
+
+myynh_install_system_dependencies() {
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends \
+        python3-venv \
+        build-essential \
+		redis \
+        default-libmysqlclient-dev
+}
