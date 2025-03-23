@@ -1,6 +1,14 @@
 import os
 from django.core.exceptions import ImproperlyConfigured
 
+
+import dj_database_url
+
+DATABASES = {
+    'default': dj_database_url.config(env='DATABASE_URL', conn_max_age=600)
+}
+
+
 # Utilitaire pour lire les variables d'environnement
 def get_env(var_name, default=None, required=False):
     value = os.environ.get(var_name, default)
