@@ -9,8 +9,10 @@ WorkingDirectory=__DATA_DIR__/
 
 ExecStart=__DATA_DIR__/.venv/bin/gunicorn --config __DATA_DIR__/gunicorn.conf.py wsgi
 
-StandardOutput=syslog
-StandardError=syslog
+# Supprimé car obsolète et génère un warning
+# StandardOutput=syslog
+# StandardError=syslog
+
 SyslogIdentifier=__APP__-server
 
 [Install]
