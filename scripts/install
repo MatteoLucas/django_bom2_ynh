@@ -89,7 +89,9 @@ export FIXER_ACCESS_KEY="$fixer_api_key"
 db_user=$(ynh_app_setting_get --app="$app" --key="db_user")
 db_pwd=$(ynh_app_setting_get --app="$app" --key="db_pwd")
 db_name=$(ynh_app_setting_get --app="$app" --key="db_name")
-database_url="postgres://${db_user}:${db_pwd}@localhost/${db_name}"
+#database_url="postgres://${db_user}:${db_pwd}@localhost/${db_name}"
+database_url="postgres://${db_user}:${db_pwd}@/${db_name}?host=/var/run/postgresql"
+
 export DATABASE_URL="$database_url"
 ynh_app_setting_set --app=$app --key=DATABASE_URL --value="$database_url"
 
@@ -156,7 +158,9 @@ ynh_script_progression --message="Configuring nginx web server..."
 ynh_config_add_nginx --template="nginx.conf" --domain="$domain" --port="$port"
 
 # ensuite, applique le remplacement :
-sed -i "s|__INSTALL_DIR__|$install_dir|g" /etc/nginx/conf.d/$domain.d/$app.conf
+#sed -i "s|__INSTALL_DIR__|$install_dir|g" /etc/nginx/conf.d/$domain.d/$app.conf
+sed -i "s|__INSTALL_DIR__|$data_dir|g" /etc/nginx/conf.d/$domain.d/$app.conf
+
 
 #=================================================
 # DONE
