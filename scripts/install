@@ -13,6 +13,7 @@ admin_email=$(ynh_user_get_info --username="$admin" --key=mail)
 # COPY SOURCE FILES
 #=================================================
 cp -r ../bom "$data_dir/"
+mkdir -p "/var/log/$app"
 
 #=================================================
 # SETTINGS
