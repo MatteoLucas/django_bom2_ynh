@@ -22,32 +22,28 @@ ynh_script_progression --message="Storing installation settings..."
 log_file="$data_dir/django.log"
 ynh_app_setting_set --app=$app --key=log_file --value="$log_file"
 
-myynh_install_system_dependencies
+# Set default/fake keys
+ynh_app_setting_set --app=$app --key=sendgrid_api_key --value="fake-sendgrid-key"
+ynh_app_setting_set --app=$app --key=fixer_api_key --value="$fixer_api_key"
+
+# Debug / log
+ynh_app_setting_set --app=$app --key=debug_enabled --value="$debug_enabled"
+ynh_app_setting_set --app=$app --key=log_level --value="$log_level"
+ynh_app_setting_set --app=$app --key=default_from_email --value="$default_from_email"
+ynh_app_setting_set --app=$app --key=admin_email --value="$admin_email"
 
 # Redis
 redis_db=$(ynh_redis_get_free_db)
 ynh_app_setting_set --app=$app --key=redis_db --value="$redis_db"
 
-# App settings
-ynh_app_setting_set --app=$app --key=default_from_email --value="$default_from_email"
-ynh_app_setting_set --app=$app --key=admin_email --value="$admin_email"
-ynh_app_setting_set --app=$app --key=debug_enabled --value="$debug_enabled"
-ynh_app_setting_set --app=$app --key=log_level --value="$log_level"
-
 #=================================================
-# VALIDATION
+# CHECK IF THE APP CAN BE INSTALLED WITH THESE ARGS
 #=================================================
 ynh_script_progression --message="Validating installation parameters..."
 mkdir -p "$install_dir/media" "$install_dir/static"
 
 #=================================================
-# GENERATE SECRET_KEY
-#=================================================
-secret_key=$(openssl rand -base64 64 | tr -d '\n')
-ynh_app_setting_set --app=$app --key=secret_key --value="$secret_key"
-
-#=================================================
-# SETUP LOG FILE
+# SETUP LOGGING
 #=================================================
 ynh_script_progression --message="Setup logging..."
 myynh_setup_log_file
@@ -74,17 +70,14 @@ ynh_config_add --template="urls.py" --destination="$data_dir/urls.py"
 ynh_config_add --template="wsgi.py" --destination="$data_dir/wsgi.py"
 
 #=================================================
-# DJANGO MIGRATIONS / SUPERUSER
+# MIGRATE / COLLECTSTATIC / CREATEADMIN
 #=================================================
 ynh_script_progression --message="migrate/collectstatic/createadmin..." --weight=10
 cd "$data_dir" || exit
 
-export DJANGO_SECRET_KEY="$secret_key"
 export DJANGO_LOGFILE_DIR="$data_dir"
-export DJANGO_DEFAULT_FROM_EMAIL="$default_from_email"
-export DJANGO_ADMIN_EMAIL="$admin_email"
-export DJANGO_DEBUG="$debug_enabled"
-export DJANGO_LOG_LEVEL="$log_level"
+export SENDGRID_API_KEY="fake-sendgrid-key"
+export FIXER_ACCESS_KEY="$fixer_api_key"
 
 "$data_dir/.venv/bin/python" manage.py migrate
 
@@ -107,20 +100,20 @@ deactivate
 yunohost service add --description $app $app
 
 #=================================================
-# PERMISSIONS
+# FILE PERMISSIONS
 #=================================================
 ynh_script_progression --message="Set file permissions..."
 myynh_fix_file_permissions
 
 #=================================================
-# SYSTEMD
+# SYSTEMD SERVICE
 #=================================================
 ynh_script_progression --message="Configuring systemd service '$app'..." --weight=5
 ynh_config_add_systemd
 ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 
 #=================================================
-# NGINX
+# NGINX CONFIGURATION
 #=================================================
 ynh_script_progression --message="Configuring nginx web server..."
 ynh_config_add_nginx "public_path" "port"
