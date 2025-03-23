@@ -42,8 +42,8 @@ MIDDLEWARE = [
     'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
-ROOT_URLCONF = 'conf.urls'
-WSGI_APPLICATION = 'conf.wsgi.application'
+ROOT_URLCONF = 'urls'
+WSGI_APPLICATION = 'wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOpenId',
