@@ -129,13 +129,13 @@ ynh_config_add_systemd
 ynh_config_add_systemd
 
 # Remplacement dynamique dans le template systemd
-ynh_replace_string "__APP__" "$app" "$install_dir/systemd.service"
-ynh_replace_string "__DATA_DIR__" "$data_dir" "$install_dir/systemd.service"
-ynh_replace_string "__DB_USER__" "$db_user" "$install_dir/systemd.service"
-ynh_replace_string "__DB_PWD__" "$db_pwd" "$install_dir/systemd.service"
-ynh_replace_string "__DB_NAME__" "$db_name" "$install_dir/systemd.service"
-ynh_replace_string "__SECRET_KEY__" "$secret_key" "$install_dir/systemd.service"
-ynh_replace_string "__FIXER_API_KEY__" "$fixer_api_key" "$install_dir/systemd.service"
+sed -i "s|__APP__|$app|g" "$install_dir/systemd.service"
+sed -i "s|__DATA_DIR__|$data_dir|g" "$install_dir/systemd.service"
+sed -i "s|__DB_USER__|$db_user|g" "$install_dir/systemd.service"
+sed -i "s|__DB_PWD__|$db_pwd|g" "$install_dir/systemd.service"
+sed -i "s|__DB_NAME__|$db_name|g" "$install_dir/systemd.service"
+sed -i "s|__SECRET_KEY__|$secret_key|g" "$install_dir/systemd.service"
+sed -i "s|__FIXER_API_KEY__|$fixer_api_key|g" "$install_dir/systemd.service"
 
 
 ynh_systemctl --service=$app --action="start" --log_path="$log_file"
