@@ -1,19 +1,25 @@
 [Unit]
-Description=__APP__ server
+Description=django-bom server
 After=redis.service postgresql.service
 
 [Service]
 User=__APP__
 Group=__APP__
-WorkingDirectory=__DATA_DIR__/
+WorkingDirectory=__DATA_DIR__
 
 ExecStart=__DATA_DIR__/.venv/bin/gunicorn --config __DATA_DIR__/gunicorn.conf.py wsgi
 
-# Supprimé car obsolète et génère un warning
-# StandardOutput=syslog
-# StandardError=syslog
+# Environnement requis par Django
+Environment="DATABASE_URL=postgres://__DB_USER__:__DB_PWD__@/__DB_NAME__"
+Environment="SECRET_KEY=__SECRET_KEY__"
+Environment="SENDGRID_API_KEY=fake-sendgrid-key"
+Environment="FIXER_ACCESS_KEY=__FIXER_API_KEY__"
+Environment="DJANGO_LOGFILE_DIR=__DATA_DIR__"
 
-SyslogIdentifier=__APP__-server
+# Logging moderne
+StandardOutput=journal
+StandardError=inherit
+SyslogIdentifier=django-bom-server
 
 [Install]
 WantedBy=multi-user.target
