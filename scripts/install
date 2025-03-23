@@ -75,6 +75,11 @@ ynh_config_add --template="wsgi.py" --destination="$data_dir/wsgi.py"
 ynh_script_progression --message="migrate/collectstatic/createadmin..." --weight=10
 cd "$data_dir" || exit
 
+
+# Génère et exporte la SECRET_KEY
+secret_key=$(openssl rand -base64 64 | tr -d '\n')
+ynh_app_setting_set --app="$app" --key="secret_key" --value="$secret_key"
+export SECRET_KEY="$secret_key"
 export DJANGO_LOGFILE_DIR="$data_dir"
 export SENDGRID_API_KEY="fake-sendgrid-key"
 export FIXER_ACCESS_KEY="$fixer_api_key"
