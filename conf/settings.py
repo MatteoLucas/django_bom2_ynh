@@ -1,15 +1,16 @@
 import os
 
+# ──────────────────────────────────────────────
 # Valeurs par défaut
+# ──────────────────────────────────────────────
 DEBUG = False
-SECRET_KEY = ''  # Empêche l'erreur ImproperlyConfigured avant l'import des settings locaux
 BOM_CONFIG = {}
-BASE_DIR = None
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SECRET_KEY = ''  # Initialisation à vide
 
-# Construction des chemins
-if not BASE_DIR:
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+# ──────────────────────────────────────────────
+# Django configuration
+# ──────────────────────────────────────────────
 INSTALLED_APPS = [
     'bom.apps.BomConfig',
     'django.contrib.admin',
@@ -183,11 +184,10 @@ BOM_LOGIN_URL = None
 # ──────────────────────────────────────────────
 # Surcharges locales et validation
 # ──────────────────────────────────────────────
-
 try:
     from bom.local_settings import *
 except ImportError as e:
     print("No local_settings.py loaded:", e)
 
 if not SECRET_KEY:
-    raise Exception("SECRET_KEY is not set. Make sure local_settings.py defines it.")
+    raise Exception("❌ SECRET_KEY is not set. Make sure 'bom/local_settings.py' defines it.")

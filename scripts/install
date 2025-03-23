@@ -19,17 +19,14 @@ cp -r ../bom "$data_dir/"
 #=================================================
 ynh_script_progression --message="Storing installation settings..."
 
-# Logging:
 log_file="$data_dir/django.log"
 ynh_app_setting_set --app=$app --key=log_file --value="$log_file"
 
 myynh_install_system_dependencies
 
-# Redis:
 redis_db=$(ynh_redis_get_free_db)
 ynh_app_setting_set --app=$app --key=redis_db --value="$redis_db"
 
-# App settings:
 ynh_app_setting_set --app=$app --key=default_from_email --value="$default_from_email"
 ynh_app_setting_set --app=$app --key=admin_email --value="$admin_email"
 ynh_app_setting_set --app=$app --key=debug_enabled --value="$debug_enabled"
@@ -42,11 +39,42 @@ ynh_script_progression --message="Validating installation parameters..."
 mkdir -p "$install_dir/media" "$install_dir/static"
 
 #=================================================
-# GENERATE SECRET_KEY EARLY
+# GENERATE local_settings.py
 #=================================================
 secret_key=$(openssl rand -base64 64 | tr -d '\n')
-echo "SECRET_KEY = '$secret_key'" > "$data_dir/local_settings.py"
 ynh_app_setting_set --app=$app --key=secret_key --value="$secret_key"
+
+cat > "$data_dir/local_settings.py" <<EOF
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SECRET_KEY = '$secret_key'
+DEBUG = ${debug_enabled,,} == "yes"
+ALLOWED_HOSTS = ['*']
+
+BOM_CONFIG = {
+    'mouser_api_key': 'changeme',
+    'admin_dashboard': {
+        'enable_autocomplete': False,
+        'page_size': 50,
+    }
+}
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'changeme'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'changeme'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+
+EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+SENDGRID_API_KEY = 'changeme'
+
+FIXER_ACCESS_KEY = 'changeme'
+EOF
 
 #=================================================
 # SETUP LOG FILE
