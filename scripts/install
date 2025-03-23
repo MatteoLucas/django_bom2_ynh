@@ -97,6 +97,12 @@ ynh_app_setting_set --app=$app --key=DATABASE_URL --value="$database_url"
 
 "$data_dir/.venv/bin/python" manage.py migrate
 
+# Collect static files
+ynh_script_progression --message="Collecting static files..." --weight=5
+
+"$data_dir/.venv/bin/python" manage.py collectstatic --noinput
+
+
 "$data_dir/.venv/bin/python" manage.py shell <<EOF
 from django.contrib.auth import get_user_model
 User = get_user_model()
