@@ -24,57 +24,27 @@ ynh_app_setting_set --app=$app --key=log_file --value="$log_file"
 
 myynh_install_system_dependencies
 
+# Redis
 redis_db=$(ynh_redis_get_free_db)
 ynh_app_setting_set --app=$app --key=redis_db --value="$redis_db"
 
+# App settings
 ynh_app_setting_set --app=$app --key=default_from_email --value="$default_from_email"
 ynh_app_setting_set --app=$app --key=admin_email --value="$admin_email"
 ynh_app_setting_set --app=$app --key=debug_enabled --value="$debug_enabled"
 ynh_app_setting_set --app=$app --key=log_level --value="$log_level"
 
 #=================================================
-# CHECK IF THE APP CAN BE INSTALLED WITH THESE ARGS
+# VALIDATION
 #=================================================
 ynh_script_progression --message="Validating installation parameters..."
 mkdir -p "$install_dir/media" "$install_dir/static"
 
 #=================================================
-# GENERATE local_settings.py
+# GENERATE SECRET_KEY
 #=================================================
 secret_key=$(openssl rand -base64 64 | tr -d '\n')
 ynh_app_setting_set --app=$app --key=secret_key --value="$secret_key"
-
-cat > "$data_dir/local_settings.py" <<EOF
-import os
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SECRET_KEY = '$secret_key'
-DEBUG = ${debug_enabled,,} == "yes"
-ALLOWED_HOSTS = ['*']
-
-BOM_CONFIG = {
-    'mouser_api_key': 'changeme',
-    'admin_dashboard': {
-        'enable_autocomplete': False,
-        'page_size': 50,
-    }
-}
-
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'changeme'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'changeme'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
-EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
-SENDGRID_API_KEY = 'changeme'
-
-FIXER_ACCESS_KEY = 'changeme'
-EOF
 
 #=================================================
 # SETUP LOG FILE
@@ -104,12 +74,17 @@ ynh_config_add --template="urls.py" --destination="$data_dir/urls.py"
 ynh_config_add --template="wsgi.py" --destination="$data_dir/wsgi.py"
 
 #=================================================
-# MIGRATE / COLLECTSTATIC / CREATEADMIN
+# DJANGO MIGRATIONS / SUPERUSER
 #=================================================
 ynh_script_progression --message="migrate/collectstatic/createadmin..." --weight=10
 cd "$data_dir" || exit
 
+export DJANGO_SECRET_KEY="$secret_key"
 export DJANGO_LOGFILE_DIR="$data_dir"
+export DJANGO_DEFAULT_FROM_EMAIL="$default_from_email"
+export DJANGO_ADMIN_EMAIL="$admin_email"
+export DJANGO_DEBUG="$debug_enabled"
+export DJANGO_LOG_LEVEL="$log_level"
 
 "$data_dir/.venv/bin/python" manage.py migrate
 
@@ -125,27 +100,27 @@ EOF
 "$data_dir/.venv/bin/python" manage.py check --deploy || true
 
 #=================================================
-# INTEGRATE SERVICE IN YUNOHOST
+# YUNOHOST INTEGRATION
 #=================================================
 ynh_script_progression --message="Integrating service in YunoHost..."
 deactivate
 yunohost service add --description $app $app
 
 #=================================================
-# FILE PERMISSIONS
+# PERMISSIONS
 #=================================================
 ynh_script_progression --message="Set file permissions..."
 myynh_fix_file_permissions
 
 #=================================================
-# SYSTEMD SERVICE
+# SYSTEMD
 #=================================================
 ynh_script_progression --message="Configuring systemd service '$app'..." --weight=5
 ynh_config_add_systemd
 ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 
 #=================================================
-# NGINX CONFIGURATION
+# NGINX
 #=================================================
 ynh_script_progression --message="Configuring nginx web server..."
 ynh_config_add_nginx "public_path" "port"
