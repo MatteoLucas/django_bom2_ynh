@@ -146,7 +146,7 @@ ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 # NGINX CONFIGURATION
 #=================================================
 ynh_script_progression --message="Configuring nginx web server..."
-ynh_config_add_nginx "public_path" "port"
+ynh_config_add_nginx --template="nginx.conf" --domain="$domain" --port="$port"
 
 #=================================================
 # DONE
