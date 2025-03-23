@@ -159,7 +159,7 @@ ynh_config_add_nginx --template="nginx.conf" --domain="$domain" --port="$port"
 
 # ensuite, applique le remplacement :
 #sed -i "s|__INSTALL_DIR__|$install_dir|g" /etc/nginx/conf.d/$domain.d/$app.conf
-sed -i "s|__INSTALL_DIR__|$data_dir|g" /etc/nginx/conf.d/$domain.d/$app.conf
+#sed -i "s|__INSTALL_DIR__|$data_dir|g" /etc/nginx/conf.d/$domain.d/$app.conf
 
 
 #=================================================
