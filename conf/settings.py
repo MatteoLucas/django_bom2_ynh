@@ -154,6 +154,9 @@ FIXER_ACCESS_KEY = get_env("FIXER_ACCESS_KEY", required=True)
 EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
 SENDGRID_API_KEY = get_env("SENDGRID_API_KEY", required=True)
 
+
+DEBUG = True
+
 # Logging
 LOGGING = {
     'version': 1,
