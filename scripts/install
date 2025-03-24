@@ -84,6 +84,8 @@ export SECRET_KEY="$secret_key"
 export DJANGO_LOGFILE_DIR="$data_dir"
 export SENDGRID_API_KEY="fake-sendgrid-key"
 export FIXER_ACCESS_KEY="$fixer_api_key"
+export ADMIN_USERNAME="$admin"
+export LOG_LEVEL="$log_level"
 
 
 db_user=$(ynh_app_setting_get --app="$app" --key="db_user")

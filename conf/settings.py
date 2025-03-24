@@ -21,6 +21,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Configuration de base
 SECRET_KEY = get_env("SECRET_KEY", required=True)
 DEBUG = get_env("DEBUG", "False").lower() in ["1", "true", "yes"]
+LOG_LEVEL = get_env("LOG_LEVEL", "WARNING")
 ALLOWED_HOSTS = ["*"]  # Ajustable
 # Django apps
 INSTALLED_APPS = [
