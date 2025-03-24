@@ -1,19 +1,31 @@
 import os
+from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
+
 from django_yunohost_integration.base_settings import *  # noqa
 from django_yunohost_integration.secret_key import get_or_create_secret
-from pathlib import Path
 
+# Intégration SSO
 YNH_SETUP_USER = 'setup_user.setup_project_user'
 
+# Utilitaire pour lire les variables d'environnement
+def get_env(var_name, default=None, required=False):
+    value = os.environ.get(var_name, default)
+    if required and value is None:
+        raise ImproperlyConfigured(f"Missing required environment variable: {var_name}")
+    return value
 
-# SSO-ready secret key file
-DATA_DIR_PATH = Path('/home/yunohost.app/django-bom')  # ou injecté par templating
+# Chemins de base
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR_PATH = Path('/home/yunohost.app/django-bom')  # À templater ?
 SECRET_KEY = get_or_create_secret(DATA_DIR_PATH / 'secret.txt')
 
-# ... variables env, BASE_DIR, DEBUG etc ...
+# Debug & conf
+DEBUG = get_env("DEBUG", "False").lower() in ["1", "true", "yes"]
+ALLOWED_HOSTS = ["*"]
 
+# Django apps
 INSTALLED_APPS = [
     'bom.apps.BomConfig',
     'django.contrib.admin',
@@ -41,10 +53,53 @@ MIDDLEWARE = [
     'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
+ROOT_URLCONF = 'urls'
+WSGI_APPLICATION = 'wsgi.application'
+
 AUTHENTICATION_BACKENDS = (
     'django_yunohost_integration.sso_auth.auth_backend.SSOwatUserBackend',  # ✅ Ajout SSO en premier
     'django.contrib.auth.backends.ModelBackend',
 )
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'bom/templates/bom')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
+                'bom.context_processors.bom_config',
+            ],
+        },
+    },
+]
+
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# Internationalisation
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
+
+# Statics & Media
+STATIC_URL = '/static/'
+STATIC_ROOT = '/home/yunohost.app/django-bom/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # ✅ Redirection vers SSO
 LOGIN_URL = '/yunohost/sso/'
