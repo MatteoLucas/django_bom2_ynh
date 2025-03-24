@@ -75,3 +75,4 @@ urllib3==1.26.5
 webencodings==0.5.1
 zipp==3.4.1
 dj_database_url==2.3.0
+django-yunohost-integration==0.10.2

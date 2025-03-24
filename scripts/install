@@ -76,48 +76,38 @@ ynh_config_add --template="wsgi.py" --destination="$data_dir/wsgi.py"
 ynh_script_progression --message="migrate/collectstatic/createadmin..." --weight=10
 cd "$data_dir" || exit
 
+# Génére le fichier secret.txt
+secret_file="$data_dir/secret.txt"
+openssl rand -hex 64 > "$secret_file"
+chown $app:$app "$secret_file"
+chmod 400 "$secret_file"
 
-# Génère et exporte la SECRET_KEY
-secret_key=$(openssl rand -base64 64 | tr -d '\n')
-ynh_app_setting_set --app="$app" --key="secret_key" --value="$secret_key"
-export SECRET_KEY="$secret_key"
+# Environnement Django
 export DJANGO_LOGFILE_DIR="$data_dir"
 export SENDGRID_API_KEY="fake-sendgrid-key"
 export FIXER_ACCESS_KEY="$fixer_api_key"
 
-
 db_user=$(ynh_app_setting_get --app="$app" --key="db_user")
 db_pwd=$(ynh_app_setting_get --app="$app" --key="db_pwd")
 db_name=$(ynh_app_setting_get --app="$app" --key="db_name")
-#database_url="postgres://${db_user}:${db_pwd}@localhost/${db_name}"
 database_url="postgres://${db_user}:${db_pwd}@/${db_name}?host=/var/run/postgresql"
 
 export DATABASE_URL="$database_url"
 ynh_app_setting_set --app=$app --key=DATABASE_URL --value="$database_url"
 
-
-
 "$data_dir/.venv/bin/python" manage.py migrate
 
 # Collect static files
 ynh_script_progression --message="Collecting static files..." --weight=5
-
 "$data_dir/.venv/bin/python" manage.py collectstatic --noinput
 
+# Create admin user (no password, for SSO only)
+"$data_dir/.venv/bin/python" manage.py create_superuser --username="$admin" --email="$admin_email"
 
-"$data_dir/.venv/bin/python" manage.py shell <<EOF
-from django.contrib.auth import get_user_model
-User = get_user_model()
-User.objects.update_or_create(
-    username="$admin",
-    defaults={"email": "$admin_email", "is_superuser": True, "is_staff": True}
-)
-EOF
-
+# Copie les fichiers statiques vers nginx
 mkdir -p /var/www/$app/static
 cp -r "$data_dir/static/." "/var/www/$app/static/"
 chown -R www-data: /var/www/$app/static
-
 
 "$data_dir/.venv/bin/python" manage.py check --deploy || true
 
@@ -140,18 +130,14 @@ myynh_fix_file_permissions
 ynh_script_progression --message="Configuring systemd service '$app'..." --weight=5
 ynh_config_add_systemd
 
-
 # Remplacement dynamique dans le template systemd
 systemd_file="/etc/systemd/system/$app.service"
-
 sed -i "s|__APP__|$app|g" "$systemd_file"
 sed -i "s|__DATA_DIR__|$data_dir|g" "$systemd_file"
 sed -i "s|__DB_NAME__|$db_name|g" "$systemd_file"
 sed -i "s|__DB_USER__|$db_user|g" "$systemd_file"
 sed -i "s|__DB_PWD__|$db_pwd|g" "$systemd_file"
-sed -i "s|__SECRET_KEY__|$secret_key|g" "$systemd_file"
 sed -i "s|__FIXER_API_KEY__|$fixer_api_key|g" "$systemd_file"
-
 
 ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 
@@ -159,13 +145,11 @@ ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 # NGINX CONFIGURATION
 #=================================================
 ynh_script_progression --message="Configuring nginx web server..."
-
 ynh_config_add_nginx --template="nginx.conf" --domain="$domain" --port="$port"
 
 #=================================================
 # DONE
 #=================================================
-
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl restart "$app"

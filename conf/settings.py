@@ -1,30 +1,17 @@
 import os
 from django.core.exceptions import ImproperlyConfigured
-
-
 import dj_database_url
+from django_yunohost_integration.base_settings import *  # noqa
+from django_yunohost_integration.secret_key import get_or_create_secret
 
-DATABASES = {
-    'default': dj_database_url.config(env='DATABASE_URL', conn_max_age=600)
-}
+YNH_SETUP_USER = 'setup_user.setup_project_user'
 
 
-# Utilitaire pour lire les variables d'environnement
-def get_env(var_name, default=None, required=False):
-    value = os.environ.get(var_name, default)
-    if required and value is None:
-        raise ImproperlyConfigured(f"Missing required environment variable: {var_name}")
-    return value
+# SSO-ready secret key file
+SECRET_KEY = get_or_create_secret("/home/yunohost.app/django-bom/secret.txt")
 
-# Chemin de base du projet
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ... variables env, BASE_DIR, DEBUG etc ...
 
-# Configuration de base
-SECRET_KEY = get_env("SECRET_KEY", required=True)
-DEBUG = get_env("DEBUG", "False").lower() in ["1", "true", "yes"]
-ALLOWED_HOSTS = ["*"]  # Ajustable
-
-# Django apps
 INSTALLED_APPS = [
     'bom.apps.BomConfig',
     'django.contrib.admin',
@@ -37,6 +24,7 @@ INSTALLED_APPS = [
     'social_django',
     'djmoney',
     'djmoney.contrib.exchange',
+    'django_yunohost_integration',  # ✅ Ajout
 ]
 
 MIDDLEWARE = [
@@ -45,66 +33,21 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_yunohost_integration.sso_auth.auth_middleware.SSOwatRemoteUserMiddleware',  # ✅ Ajout
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
-ROOT_URLCONF = 'urls'
-WSGI_APPLICATION = 'wsgi.application'
-
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.google.GoogleOpenId',
-    'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.google.GoogleOAuth',
+    'django_yunohost_integration.sso_auth.auth_backend.SSOwatUserBackend',  # ✅ Ajout SSO en premier
     'django.contrib.auth.backends.ModelBackend',
 )
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'bom/templates/bom')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.media',
-                'social_django.context_processors.backends',
-                'social_django.context_processors.login_redirect',
-                'bom.context_processors.bom_config',
-            ],
-        },
-    },
-]
-
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
-
-# Internationalisation
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
-
-# Statics & Media
-STATIC_URL = '/static/'
-STATIC_ROOT = '/home/yunohost.app/django-bom/static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-
-# Login/logout
-LOGIN_URL = '/login/'
-LOGOUT_URL = '/logout/'
+# ✅ Redirection vers SSO
+LOGIN_URL = '/yunohost/sso/'
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/yunohost/sso/'
 
 # Social Auth Google
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "")
