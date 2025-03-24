@@ -22,7 +22,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SECRET_KEY = get_env("SECRET_KEY", required=True)
 DEBUG = get_env("DEBUG", "False").lower() in ["1", "true", "yes"]
 ALLOWED_HOSTS = ["*"]  # Ajustable
-
 # Django apps
 INSTALLED_APPS = [
     'bom.apps.BomConfig',
@@ -206,8 +205,6 @@ BOM_LOGIN_URL = None
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # YunoHost SSO integration
-INSTALLED_APPS.append('django_yunohost_integration')
-
 # Fonction qui sera appelée pour finaliser un profil utilisateur
 YNH_SETUP_USER = 'setup_user.setup_project_user'
 

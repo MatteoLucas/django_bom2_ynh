@@ -15,6 +15,7 @@ Environment="SECRET_KEY=__SECRET_KEY__"
 Environment="SENDGRID_API_KEY=fake-sendgrid-key"
 Environment="FIXER_ACCESS_KEY=__FIXER_API_KEY__"
 Environment="DJANGO_LOGFILE_DIR=__DATA_DIR__"
+Environment="ADMIN_USERNAME=__ADMIN__"
 
 # Logging moderne
 StandardOutput=journal

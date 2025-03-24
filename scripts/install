@@ -144,6 +144,7 @@ sed -i "s|__DB_USER__|$db_user|g" "$systemd_file"
 sed -i "s|__DB_PWD__|$db_pwd|g" "$systemd_file"
 sed -i "s|__SECRET_KEY__|$secret_key|g" "$systemd_file"
 sed -i "s|__FIXER_API_KEY__|$fixer_api_key|g" "$systemd_file"
+sed -i "s|__ADMIN__|$admin|g" "$systemd_file"
 
 
 ynh_systemctl --service=$app --action="start" --log_path="$log_file"
