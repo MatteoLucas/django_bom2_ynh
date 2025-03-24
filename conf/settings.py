@@ -1,8 +1,7 @@
 import os
 from django.core.exceptions import ImproperlyConfigured
-
-
 import dj_database_url
+from pathlib import Path
 
 DATABASES = {
     'default': dj_database_url.config(env='DATABASE_URL', conn_max_age=600)
@@ -37,6 +36,7 @@ INSTALLED_APPS = [
     'social_django',
     'djmoney',
     'djmoney.contrib.exchange',
+    'django_yunohost_integration',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
+    'django_yunohost_integration.sso_auth.auth_middleware.SSOwatRemoteUserMiddleware',
 ]
 
 ROOT_URLCONF = 'urls'
@@ -57,6 +58,7 @@ AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOpenId',
     'social_core.backends.google.GoogleOAuth2',
     'social_core.backends.google.GoogleOAuth',
+    'django_yunohost_integration.sso_auth.auth_backend.SSOwatUserBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -101,10 +103,10 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Login/logout
-LOGIN_URL = '/login/'
-LOGOUT_URL = '/logout/'
+LOGIN_URL = '/yunohost/sso/'
+LOGOUT_URL = '/yunohost/sso/'
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/yunohost/sso/'
 
 # Social Auth Google
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "")
@@ -202,3 +204,18 @@ BOM_CONFIG = {
 
 BOM_LOGIN_URL = None
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# YunoHost SSO integration
+INSTALLED_APPS.append('django_yunohost_integration')
+
+# Fonction qui sera appelée pour finaliser un profil utilisateur
+YNH_SETUP_USER = 'setup_user.setup_project_user'
+
+# Configuration des backends d'authentification
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOpenId',
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.google.GoogleOAuth',
+    'django_yunohost_integration.sso_auth.auth_backend.SSOwatUserBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)

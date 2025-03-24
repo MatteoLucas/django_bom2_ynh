@@ -3,12 +3,10 @@ from inventory.permissions import get_or_create_normal_user_group
 
 def setup_project_user(user):
     """
-    All users used the Django admin, so we need to set the "staff" user flag.
-    Called from django_yunohost_integration.sso_auth
+    Configure les utilisateurs pour django-bom.
+    Fonction appelée par django_yunohost_integration.sso_auth
     """
-    pyinventory_user_group = get_or_create_normal_user_group()[0]
-    user.groups.set([pyinventory_user_group])
-
+    # Tous les utilisateurs auront accès à l'interface d'administration
     user.is_staff = True
     user.save()
     return user

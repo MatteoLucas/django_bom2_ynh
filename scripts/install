@@ -104,15 +104,8 @@ ynh_script_progression --message="Collecting static files..." --weight=5
 
 "$data_dir/.venv/bin/python" manage.py collectstatic --noinput
 
-
-"$data_dir/.venv/bin/python" manage.py shell <<EOF
-from django.contrib.auth import get_user_model
-User = get_user_model()
-User.objects.update_or_create(
-    username="$admin",
-    defaults={"email": "$admin_email", "is_superuser": True, "is_staff": True}
-)
-EOF
+# Création du superutilisateur avec django_yunohost_integration
+"$data_dir/.venv/bin/python" manage.py create_superuser --username="$admin" --email="$admin_email"
 
 mkdir -p /var/www/$app/static
 cp -r "$data_dir/static/." "/var/www/$app/static/"
