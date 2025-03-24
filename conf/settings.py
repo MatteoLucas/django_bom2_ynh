@@ -7,7 +7,6 @@ from django_yunohost_integration.base_settings import *  # noqa
 from django_yunohost_integration.secret_key import get_or_create_secret
 
 DATABASES = {
-from django_yunohost_integration.secret_key import get_or_create_secret
     'default': dj_database_url.config(env='DATABASE_URL', conn_max_age=600)
 }
 
