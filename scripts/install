@@ -114,6 +114,11 @@ User.objects.update_or_create(
 )
 EOF
 
+mkdir -p /var/www/$app/static
+cp -r "$data_dir/static/." "/var/www/$app/static/"
+chown -R www-data: /var/www/$app/static
+
+
 "$data_dir/.venv/bin/python" manage.py check --deploy || true
 
 #=================================================
@@ -156,11 +161,6 @@ ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 ynh_script_progression --message="Configuring nginx web server..."
 
 ynh_config_add_nginx --template="nginx.conf" --domain="$domain" --port="$port"
-
-# ensuite, applique le remplacement :
-#sed -i "s|__INSTALL_DIR__|$install_dir|g" /etc/nginx/conf.d/$domain.d/$app.conf
-#sed -i "s|__INSTALL_DIR__|$data_dir|g" /etc/nginx/conf.d/$domain.d/$app.conf
-
 
 #=================================================
 # DONE
