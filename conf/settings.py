@@ -95,8 +95,8 @@ USE_L10N = True
 USE_TZ = True
 
 # Statics & Media
-STATIC_URL = os.environ.get("STATIC_URL", "/static/")
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+STATIC_ROOT = '/home/yunohost.app/django-bom/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
