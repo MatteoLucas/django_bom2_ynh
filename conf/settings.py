@@ -6,10 +6,6 @@ import dj_database_url
 from django_yunohost_integration.base_settings import *  # noqa
 from django_yunohost_integration.secret_key import get_or_create_secret
 
-DATABASES = {
-    'default': dj_database_url.config(env='DATABASE_URL', conn_max_age=600)
-}
-
 # Intégration SSO
 YNH_SETUP_USER = 'setup_user.setup_project_user'
 
@@ -22,13 +18,20 @@ def get_env(var_name, default=None, required=False):
 
 # Chemins de base
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR_PATH = Path('/home/yunohost.app/django-bom')  # À templater ?
+DATA_DIR_PATH = Path('__DATA_DIR__')  # remplacé dynamiquement par le script install
 SECRET_KEY = get_or_create_secret(DATA_DIR_PATH / 'secret.txt')
 
 # Debug & conf
 DEBUG = get_env("DEBUG", "False").lower() in ["1", "true", "yes"]
 LOG_LEVEL = get_env("LOG_LEVEL", "WARNING")
 ALLOWED_HOSTS = ["*"]
+
+# Database
+DATABASES = {
+    'default': dj_database_url.config(env='DATABASE_URL', conn_max_age=600)
+}
+if 'ENGINE' not in DATABASES['default']:
+    DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
 
 # Django apps
 INSTALLED_APPS = [
@@ -43,7 +46,7 @@ INSTALLED_APPS = [
     'social_django',
     'djmoney',
     'djmoney.contrib.exchange',
-    'django_yunohost_integration',  # ✅ Ajout
+    'django_yunohost_integration',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +55,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django_yunohost_integration.sso_auth.auth_middleware.SSOwatRemoteUserMiddleware',  # ✅ Ajout
+    'django_yunohost_integration.sso_auth.auth_middleware.SSOwatRemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
@@ -62,7 +65,7 @@ ROOT_URLCONF = 'urls'
 WSGI_APPLICATION = 'wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
-    'django_yunohost_integration.sso_auth.auth_backend.SSOwatUserBackend',  # ✅ Ajout SSO en premier
+    'django_yunohost_integration.sso_auth.auth_backend.SSOwatUserBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -102,7 +105,7 @@ USE_TZ = True
 
 # Statics & Media
 STATIC_URL = '/static/'
-STATIC_ROOT = '/home/yunohost.app/django-bom/static/'
+STATIC_ROOT = str(DATA_DIR_PATH / 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
@@ -159,9 +162,6 @@ FIXER_ACCESS_KEY = get_env("FIXER_ACCESS_KEY", required=True)
 EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
 SENDGRID_API_KEY = get_env("SENDGRID_API_KEY", required=True)
 
-
-DEBUG = True
-
 # Logging
 LOGGING = {
     'version': 1,
@@ -185,7 +185,7 @@ LOGGING = {
         },
         'django': {
             'handlers': ['logfile'],
-            'level': get_env("LOG_LEVEL", "WARNING"),
+            'level': LOG_LEVEL,
             'propagate': False,
         },
         'bom': {

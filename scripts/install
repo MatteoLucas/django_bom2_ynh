@@ -37,6 +37,9 @@ ynh_app_setting_set --app=$app --key=admin_email --value="$admin_email"
 redis_db=$(ynh_redis_get_free_db)
 ynh_app_setting_set --app=$app --key=redis_db --value="$redis_db"
 
+# Ajout ADMIN_USERNAME
+ynh_app_setting_set --app=$app --key=ADMIN_USERNAME --value="$admin"
+
 #=================================================
 # CHECK IF THE APP CAN BE INSTALLED WITH THESE ARGS
 #=================================================
@@ -86,6 +89,7 @@ chmod 400 "$secret_file"
 export DJANGO_LOGFILE_DIR="$data_dir"
 export SENDGRID_API_KEY="fake-sendgrid-key"
 export FIXER_ACCESS_KEY="$fixer_api_key"
+export ADMIN_USERNAME="$admin"
 
 db_user=$(ynh_app_setting_get --app="$app" --key="db_user")
 db_pwd=$(ynh_app_setting_get --app="$app" --key="db_pwd")
