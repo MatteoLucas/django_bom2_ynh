@@ -23,6 +23,7 @@ SECRET_KEY = get_or_create_secret(DATA_DIR_PATH / 'secret.txt')
 
 # Debug & conf
 DEBUG = get_env("DEBUG", "False").lower() in ["1", "true", "yes"]
+LOG_LEVEL = get_env("LOG_LEVEL", "WARNING")
 ALLOWED_HOSTS = ["*"]
 
 # Django apps
