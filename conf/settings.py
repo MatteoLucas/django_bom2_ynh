@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
-from pathlib import Path
 
 from django_yunohost_integration.base_settings import *  # noqa
 from django_yunohost_integration.secret_key import get_or_create_secret
@@ -25,7 +24,15 @@ SECRET_KEY = get_or_create_secret(DATA_DIR_PATH / 'secret.txt')
 # Debug & conf
 DEBUG = get_env("DEBUG", "False").lower() in ["1", "true", "yes"]
 LOG_LEVEL = get_env("LOG_LEVEL", "WARNING")
-ALLOWED_HOSTS = ["*"]  # Ajustable
+ALLOWED_HOSTS = ["*"]
+
+# Database
+DATABASES = {
+    'default': dj_database_url.config(env='DATABASE_URL', conn_max_age=600)
+}
+if 'ENGINE' not in DATABASES['default']:
+    DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
+
 # Django apps
 INSTALLED_APPS = [
     'bom.apps.BomConfig',
@@ -52,16 +59,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
-    'django_yunohost_integration.sso_auth.auth_middleware.SSOwatRemoteUserMiddleware',
 ]
 
 ROOT_URLCONF = 'urls'
 WSGI_APPLICATION = 'wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.google.GoogleOpenId',
-    'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.google.GoogleOAuth',
     'django_yunohost_integration.sso_auth.auth_backend.SSOwatUserBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
@@ -106,9 +109,8 @@ STATIC_ROOT = str(DATA_DIR_PATH / 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
-# Login/logout
+# ✅ Redirection vers SSO
 LOGIN_URL = '/yunohost/sso/'
-LOGOUT_URL = '/yunohost/sso/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/yunohost/sso/'
 
@@ -205,16 +207,3 @@ BOM_CONFIG = {
 
 BOM_LOGIN_URL = None
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
-
-# YunoHost SSO integration
-# Fonction qui sera appelée pour finaliser un profil utilisateur
-YNH_SETUP_USER = 'setup_user.setup_project_user'
-
-# Configuration des backends d'authentification
-AUTHENTICATION_BACKENDS = (
-    'social_core.backends.google.GoogleOpenId',
-    'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.google.GoogleOAuth',
-    'django_yunohost_integration.sso_auth.auth_backend.SSOwatUserBackend',
-    'django.contrib.auth.backends.ModelBackend',
-)
