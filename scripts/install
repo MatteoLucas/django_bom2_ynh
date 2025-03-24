@@ -90,6 +90,8 @@ export DJANGO_LOGFILE_DIR="$data_dir"
 export SENDGRID_API_KEY="fake-sendgrid-key"
 export FIXER_ACCESS_KEY="$fixer_api_key"
 export ADMIN_USERNAME="$admin"
+export LOG_LEVEL="$log_level"
+
 
 db_user=$(ynh_app_setting_get --app="$app" --key="db_user")
 db_pwd=$(ynh_app_setting_get --app="$app" --key="db_pwd")
@@ -105,10 +107,16 @@ ynh_app_setting_set --app=$app --key=DATABASE_URL --value="$database_url"
 ynh_script_progression --message="Collecting static files..." --weight=5
 "$data_dir/.venv/bin/python" manage.py collectstatic --noinput
 
-# Create admin user (no password, for SSO only)
-"$data_dir/.venv/bin/python" manage.py create_superuser --username="$admin" --email="$admin_email"
 
-# Copie les fichiers statiques vers nginx
+"$data_dir/.venv/bin/python" manage.py shell <<EOF
+from django.contrib.auth import get_user_model
+User = get_user_model()
+User.objects.update_or_create(
+    username="$admin",
+    defaults={"email": "$admin_email", "is_superuser": True, "is_staff": True}
+)
+EOF
+
 mkdir -p /var/www/$app/static
 cp -r "$data_dir/static/." "/var/www/$app/static/"
 chown -R www-data: /var/www/$app/static
@@ -142,6 +150,7 @@ sed -i "s|__DB_NAME__|$db_name|g" "$systemd_file"
 sed -i "s|__DB_USER__|$db_user|g" "$systemd_file"
 sed -i "s|__DB_PWD__|$db_pwd|g" "$systemd_file"
 sed -i "s|__FIXER_API_KEY__|$fixer_api_key|g" "$systemd_file"
+
 
 ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 

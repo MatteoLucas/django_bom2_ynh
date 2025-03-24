@@ -79,6 +79,10 @@ cd "$data_dir" || exit
 # Just for debugging:
 ./manage.py diffsettings
 
+# Configuration d'environnement nécessaire
+export LOG_LEVEL="$log_level"
+export ADMIN_USERNAME="$admin"
+
 ./manage.py migrate --no-input
 ./manage.py collectstatic --no-input
 
