@@ -1,12 +1,9 @@
 from django.contrib.auth.models import User
 
 
-def setup_project_user(user: User, sso_data: dict) -> None:
+def setup_project_user(user, sso_data: dict = None):
     """
-    Personnalise l'utilisateur Django après login via SSOwat.
-    - Récupère les données du header SSO
-    - Assigne au groupe par défaut
-    - Active l'accès à l’admin Django
+    Setup basic user profile from SSO data.
     """
     if sso_data:
         user.email = sso_data.get("email", "") or user.email
@@ -16,3 +13,4 @@ def setup_project_user(user: User, sso_data: dict) -> None:
     # Permet l'accès à l'admin Django
     user.is_staff = True
     user.save()
+    return user
