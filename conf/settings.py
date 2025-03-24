@@ -3,12 +3,14 @@ from django.core.exceptions import ImproperlyConfigured
 import dj_database_url
 from django_yunohost_integration.base_settings import *  # noqa
 from django_yunohost_integration.secret_key import get_or_create_secret
+from pathlib import Path
 
 YNH_SETUP_USER = 'setup_user.setup_project_user'
 
 
 # SSO-ready secret key file
-SECRET_KEY = get_or_create_secret("/home/yunohost.app/django-bom/secret.txt")
+DATA_DIR_PATH = Path('/home/yunohost.app/django-bom')  # ou injecté par templating
+SECRET_KEY = get_or_create_secret(DATA_DIR_PATH / 'secret.txt')
 
 # ... variables env, BASE_DIR, DEBUG etc ...
 
