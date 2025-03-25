@@ -168,11 +168,14 @@ if [ ! -s "$SSO_CONF" ]; then
     echo "{ \"cookie_domain\": \"$COOKIE_DOMAIN\" }" > "$SSO_CONF"
 else
     # Ajouter ou modifier proprement l’entrée "cookie_domain"
-    jq ". + {\"cookie_domain\": \"$COOKIE_DOMAIN\"}" "$SSO_CONF" > "${SSO_CONF}.tmp" && mv "${SSO_CONF}.tmp" "$SSO_CONF"
+    if jq ". + {\"cookie_domain\": \"$COOKIE_DOMAIN\"}" "$SSO_CONF" > "${SSO_CONF}.tmp"; then
+        mv "${SSO_CONF}.tmp" "$SSO_CONF"
+    else
+        echo "Warning: failed to update cookie_domain in $SSO_CONF"
+    fi
 fi
 
-# Appliquer la config
-yunohost tools regen-conf ssowat --force
+# Reload Nginx pour appliquer les headers SSO
 systemctl reload nginx
 #=================================================
 # DONE
