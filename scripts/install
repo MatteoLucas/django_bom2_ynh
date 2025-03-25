@@ -161,7 +161,7 @@ ynh_config_add_nginx --template="nginx.conf" --domain="$domain" --port="$port"
 ynh_script_progression --message="Configuring SSO cookie domain..."
 
 SSO_CONF="/etc/ssowat/conf.json.persistent"
-COOKIE_DOMAIN=".$domain"
+COOKIE_DOMAIN=".$sso_main_domain"
 
 # Créer le fichier s’il est vide ou inexistant
 if [ ! -s "$SSO_CONF" ]; then
