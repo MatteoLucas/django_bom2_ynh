@@ -116,7 +116,7 @@ LOGIN_REDIRECT_URL = '/'
 
 SSO_MAIN_DOMAIN = get_env("SSO_MAIN_DOMAIN", required=True)
 LOGIN_URL = f"https://{SSO_MAIN_DOMAIN}/yunohost/sso/login"
-LOGOUT_REDIRECT_URL = f"https://{SSO_MAIN_DOMAIN}/yunohost/sso/logout"
+LOGOUT_REDIRECT_URL = f"https://{SSO_MAIN_DOMAIN}/yunohost/sso/"
 
 # Social Auth Google
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "")
