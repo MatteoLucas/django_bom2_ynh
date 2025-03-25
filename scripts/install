@@ -155,6 +155,25 @@ ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 ynh_script_progression --message="Configuring nginx web server..."
 ynh_config_add_nginx --template="nginx.conf" --domain="$domain" --port="$port"
 
+
+
+#=================================================
+ynh_script_progression --message="Configuring SSO cookie domain..."
+
+SSO_CONF="/etc/ssowat/conf.json.persistent"
+COOKIE_DOMAIN=".$domain"
+
+# Créer le fichier s’il est vide ou inexistant
+if [ ! -s "$SSO_CONF" ]; then
+    echo "{ \"cookie_domain\": \"$COOKIE_DOMAIN\" }" > "$SSO_CONF"
+else
+    # Ajouter ou modifier proprement l’entrée "cookie_domain"
+    jq ". + {\"cookie_domain\": \"$COOKIE_DOMAIN\"}" "$SSO_CONF" > "${SSO_CONF}.tmp" && mv "${SSO_CONF}.tmp" "$SSO_CONF"
+fi
+
+# Appliquer la config
+yunohost tools regen-conf ssowat --force
+systemctl reload nginx
 #=================================================
 # DONE
 #=================================================
