@@ -26,6 +26,9 @@ ynh_app_setting_set --app=$app --key=log_file --value="$log_file"
 # Set default/fake keys
 ynh_app_setting_set --app=$app --key=sendgrid_api_key --value="fake-sendgrid-key"
 ynh_app_setting_set --app=$app --key=fixer_api_key --value="$fixer_api_key"
+ynh_app_setting_set --app=$app --key=sso_main_domain --value="$sso_main_domain"
+
+export SSO_MAIN_DOMAIN="$sso_main_domain"
 
 # Debug / log
 ynh_app_setting_set --app=$app --key=debug_enabled --value="$debug_enabled"
@@ -142,6 +145,7 @@ sed -i "s|__DB_NAME__|$db_name|g" "$systemd_file"
 sed -i "s|__DB_USER__|$db_user|g" "$systemd_file"
 sed -i "s|__DB_PWD__|$db_pwd|g" "$systemd_file"
 sed -i "s|__FIXER_API_KEY__|$fixer_api_key|g" "$systemd_file"
+sed -i "s|__SSO_MAIN_DOMAIN__|$sso_main_domain|g" "$systemd_file"
 
 ynh_systemctl --service=$app --action="start" --log_path="$log_file"
 
