@@ -3,7 +3,7 @@ packaging_format = 2
 
 id = "django-bom"
 name = "Django-Bom"
-icon_path = "conf/icon.png",
+icon_path = "conf/icon.png"
 description.en = "Django-Bom is a Django-based Bill of Materials management system."
 description.fr = "Django-Bom est un système de gestion de nomenclature basé sur Django."
 
