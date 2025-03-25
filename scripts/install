@@ -97,7 +97,8 @@ export ADMIN_USERNAME="$admin"
 db_user=$(ynh_app_setting_get --app="$app" --key="db_user")
 db_pwd=$(ynh_app_setting_get --app="$app" --key="db_pwd")
 db_name=$(ynh_app_setting_get --app="$app" --key="db_name")
-database_url="postgres://${db_user}:${db_pwd}@/${db_name}?host=/var/run/postgresql"
+database_url="postgres://${db_user}:${db_pwd}@localhost/${db_name}"
+
 
 export DATABASE_URL="$database_url"
 ynh_app_setting_set --app=$app --key=DATABASE_URL --value="$database_url"
